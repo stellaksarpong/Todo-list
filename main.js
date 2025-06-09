@@ -1,21 +1,29 @@
 
-
 const input = document.getElementById("todoInput");
 const addBtn = document.getElementById("addBtn");
 const list = document.getElementById("todoList");
+const filterButtons = document.querySelectorAll(".filter-btn");
+const todoCount = document.getElementById("todoCount");
 
 let todos = JSON.parse(localStorage.getItem("todos")) || [];
+let filter = "all";
 
 function renderTodos() {
   list.innerHTML = "";
 
-  todos.forEach((todo, index) => {
+  const filtered = todos.filter(todo => {
+    if (filter === "active") return !todo.completed;
+    if (filter === "completed") return todo.completed;
+    return true;
+  });
+
+  filtered.forEach((todo, index) => {
     const li = document.createElement("li");
     li.className = "flex items-center justify-between p-2 border rounded";
-//
+
     const leftBox = document.createElement("div");
     leftBox.className = "flex items-center flex-1";
-// Create a checkbox for completion status
+
     const checkbox = document.createElement("input");
     checkbox.type = "checkbox";
     checkbox.checked = todo.completed;
@@ -23,7 +31,6 @@ function renderTodos() {
       "mr-2 w-4 h-4 text-orange-500 rounded focus:ring focus:ring-orange-600";
     checkbox.addEventListener("change", () => toggleComplete(index));
 
-// Create a span for the todo text
     const span = document.createElement("span");
     span.textContent = todo.text;
     span.className = `text-gray-800 ${
@@ -32,7 +39,6 @@ function renderTodos() {
 
     leftBox.append(checkbox, span);
 
-    //  Create Edit Button
     const editBtn = document.createElement("img");
     editBtn.src = "image/img1.svg";
     editBtn.alt = "Edit";
@@ -40,7 +46,6 @@ function renderTodos() {
       "w-6 h-6 cursor-pointer hover:scale-110 transition duration-150";
     editBtn.addEventListener("click", () => editTodo(index));
 
-    //  Create Delete Button
     const deleteBtn = document.createElement("img");
     deleteBtn.src = "image/trash-2.svg";
     deleteBtn.alt = "Delete";
@@ -48,7 +53,6 @@ function renderTodos() {
       "w-6 h-6 cursor-pointer hover:scale-110 transition duration-150";
     deleteBtn.addEventListener("click", () => deleteTodo(index));
 
-    // Wrap icons together
     const iconWrap = document.createElement("div");
     iconWrap.className = "flex space-x-3";
     iconWrap.append(editBtn, deleteBtn);
@@ -57,9 +61,14 @@ function renderTodos() {
     list.appendChild(li);
   });
 
+  // update localStorage
   localStorage.setItem("todos", JSON.stringify(todos));
+
+  // update counter
+  const completed = todos.filter(t => t.completed).length;
+  todoCount.textContent = `${todos.length} total — ${completed} completed`;
 }
-// Function to add a new todo item
+
 function addTodo() {
   const text = input.value.trim();
   if (text !== "") {
@@ -68,17 +77,17 @@ function addTodo() {
     renderTodos();
   }
 }
-// Function to delete a todo item
+
 function deleteTodo(index) {
   todos.splice(index, 1);
   renderTodos();
 }
-// Function to toggle the completion status of a todo item
+
 function toggleComplete(index) {
   todos[index].completed = !todos[index].completed;
   renderTodos();
 }
-// Function to edit a todo item
+
 function editTodo(index) {
   const newText = prompt("Edit your task:", todos[index].text);
   if (newText !== null && newText.trim() !== "") {
@@ -86,6 +95,14 @@ function editTodo(index) {
     renderTodos();
   }
 }
-// Add event listeners
+
 addBtn.addEventListener("click", addTodo);
 window.addEventListener("DOMContentLoaded", renderTodos);
+
+// filter logic
+filterButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    filter = btn.dataset.filter;
+    renderTodos();
+  });
+});
